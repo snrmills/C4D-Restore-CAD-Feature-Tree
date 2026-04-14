@@ -175,6 +175,7 @@ class Helpers(object):
         if filepath is None:
             filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "res/", "config.ini")
         try:
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
             with open(filepath, 'w', encoding='utf-8') as configfile:
                 config.write(configfile)
             result = True
@@ -460,7 +461,7 @@ class RestoreCADFeatureTreeDialog(gui.GeDialog):
         self.GroupEnd()
         # Settings Group End
 
-        self.AddSeparatorH(inith=360)
+        self.AddSeparatorH(0)  # initw is required in C4D 2026; 0 lets the layout stretch it
 
         # Buttons Group
         self.GroupBegin(IDC_GROUP_BUTTONS, c4d.BFH_CENTER | c4d.BFV_TOP, 2, 0, IDS_STATIC2, 0)
@@ -603,18 +604,27 @@ class RestoreCADFeatureTreeMain(plugins.CommandData):
 
 
 if __name__ == "__main__":
-    thispath = os.path.dirname(os.path.abspath(__file__))
+    thisfile = os.path.abspath(__file__)
+    thispath = os.path.dirname(thisfile)
 
-    icon = bitmaps.BaseBitmap()
-    icon.InitWith(os.path.join(thispath, "res/", "icon.tif"))
+    if thisfile.endswith(".pyp"):
+        # Loaded from the C4D plugins folder — register as a persistent command plugin.
+        icon = bitmaps.BaseBitmap()
+        icon.InitWith(os.path.join(thispath, "res/", "icon.tif"))
 
-    plugins.RegisterCommandPlugin(
-        ID_RESTORECADFEATURETREE,
-        IDS_PLUGIN_NAME,
-        0,
-        icon,
-        IDS_HELP_STRING,
-        RestoreCADFeatureTreeMain()
-    )
+        plugins.RegisterCommandPlugin(
+            ID_RESTORECADFEATURETREE,
+            IDS_PLUGIN_NAME,
+            0,
+            icon,
+            IDS_HELP_STRING,
+            RestoreCADFeatureTreeMain()
+        )
 
-    print("%s v%.1f loaded. (C) %s Andre Berg" % (IDS_PLUGIN_NAME, IDS_PLUGIN_VERSION, CR_YEAR))
+        print("%s v%.1f loaded. (C) %s Andre Berg" % (IDS_PLUGIN_NAME, IDS_PLUGIN_VERSION, CR_YEAR))
+    else:
+        # Run directly from the Script Manager — open the dialog immediately.
+        # RegisterCommandPlugin requires a .pyp file in the plugins directory;
+        # calling it from a .py script raises an OSError in C4D 2026.
+        dlg = RestoreCADFeatureTreeDialog()
+        dlg.Open(c4d.DLG_TYPE_ASYNC, defaultw=395, defaulth=230)
