@@ -379,7 +379,7 @@ class RestoreCADFeatureTreeScript(object):
         if DEBUG:
             print("pre-cleaning object names in selection...")
         for obj in sel:
-            doc.AddUndo(c4d.UNDOTYPE_CHANGEOBJ, obj)  # updated: was UNDOTYPE_CHANGE
+            doc.AddUndo(c4d.UNDOTYPE_CHANGE, obj)
             n = obj.GetName()
             for k, v in map.items():
                 n = re.sub(k, v, n)
